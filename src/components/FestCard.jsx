@@ -1,16 +1,6 @@
 import { Link } from "react-router-dom";
 import { MapPin, Heart, Flame } from "lucide-react";
-
-const GRADIENTS = [
-  "from-violet-600 via-purple-600 to-indigo-600",
-  "from-orange-500 via-amber-500 to-rose-500",
-  "from-blue-600 via-indigo-600 to-violet-600",
-  "from-pink-600 via-rose-500 to-orange-500",
-];
-
-function gradientFor(id) {
-  return GRADIENTS[id % GRADIENTS.length];
-}
+import { gradientFor } from "../utils/gradients";
 
 /**
  * size="featured" — large hero-style card (one per row, big banner)
