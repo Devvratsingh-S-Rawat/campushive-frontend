@@ -25,12 +25,17 @@ export default function FestDetail() {
 
   // per-event registration state: "idle" | "working" | "registered" | "failed"
   const [regState, setRegState] = useState({});
+  const [regError, setRegError] = useState({});
 
   useEffect(() => {
     Promise.all([api.get(`/fests/${id}`), api.get(`/fests/${id}/events`)])
       .then(([festRes, eventsRes]) => {
         setFest(festRes.data);
         setInterestedCount(festRes.data.interested_count);
+        // fest.user_interested is null when nobody's logged in, otherwise
+        // reflects the real state — no more assuming "not interested" on
+        // every fresh page load regardless of what's actually true
+        setInterested(Boolean(festRes.data.user_interested));
         setEvents(eventsRes.data);
       })
       .finally(() => setLoading(false));
@@ -85,8 +90,9 @@ export default function FestDetail() {
               razorpay_signature: response.razorpay_signature,
             });
             setRegState((s) => ({ ...s, [event.id]: "registered" }));
-          } catch {
+          } catch (err) {
             setRegState((s) => ({ ...s, [event.id]: "failed" }));
+            setRegError((s) => ({ ...s, [event.id]: err.response?.data?.detail || "Payment verification failed" }));
           }
         },
         modal: {
@@ -99,8 +105,9 @@ export default function FestDetail() {
         theme: { color: "#5b21b6" },
       });
       rzp.open();
-    } catch {
+    } catch (err) {
       setRegState((s) => ({ ...s, [event.id]: "failed" }));
+      setRegError((s) => ({ ...s, [event.id]: err.response?.data?.detail || "Something went wrong" }));
     }
   }
 
@@ -247,7 +254,7 @@ export default function FestDetail() {
                           </button>
                         )}
                         {state === "failed" && (
-                          <span className="text-xs text-red-500">Payment didn't go through</span>
+                          <span className="text-xs text-red-500">{regError[event.id] || "Something went wrong"}</span>
                         )}
                       </>
                     )}

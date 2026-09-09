@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, Sparkles } from "lucide-react";
 import { api } from "../api/client";
 import FestCard from "../components/FestCard";
@@ -10,6 +10,7 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [category, setCategory] = useState("All Fests");
   const [search, setSearch] = useState("");
+  const resultsRef = useRef(null);
 
   useEffect(() => {
     setLoading(true);
@@ -49,7 +50,14 @@ export default function Home() {
             and never miss out again.
           </p>
 
-          <div className="max-w-xl mx-auto flex items-center gap-1 sm:gap-2 bg-white rounded-full p-1.5 shadow-lg">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.target.querySelector("input").blur(); // dismiss mobile keyboard
+              resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            className="max-w-xl mx-auto flex items-center gap-1 sm:gap-2 bg-white rounded-full p-1.5 shadow-lg"
+          >
             <Search className="w-5 h-5 text-gray-400 ml-2 sm:ml-3 flex-shrink-0" />
             <input
               value={search}
@@ -57,10 +65,13 @@ export default function Home() {
               placeholder="Search fests, colleges…"
               className="flex-1 min-w-0 outline-none text-sm py-2"
             />
-            <span className="whitespace-nowrap bg-brand-orange text-white text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-full flex-shrink-0">
+            <button
+              type="submit"
+              className="whitespace-nowrap bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-full flex-shrink-0 transition-colors"
+            >
               Find Fests
-            </span>
-          </div>
+            </button>
+          </form>
         </div>
       </div>
 
@@ -70,7 +81,7 @@ export default function Home() {
           <CategoryPills active={category} onChange={setCategory} />
         </div>
 
-        <div className="flex items-center justify-between mb-4">
+        <div ref={resultsRef} className="flex items-center justify-between mb-4 scroll-mt-6">
           <h2 className="font-display text-xl font-bold text-brand-ink">
             {category === "All Fests" ? "Trending Fests" : category}
           </h2>
