@@ -3,15 +3,18 @@ import { useNavigate, Link } from "react-router-dom";
 import { PartyPopper, Plus, CheckCircle2, ArrowRight } from "lucide-react";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import EventMediaUpload from "../components/EventMediaUpload";
 
 const CATEGORIES = ["Technical", "Cultural", "Music", "Sports", "Food & Culture"];
 
 function EventForm({ festId, onAdded }) {
   const [form, setForm] = useState({
     name: "", category: "", description: "", event_date: "", location: "",
-    max_participants: "", entry_fee: "0",
+    max_participants: "", entry_fee: "0", media: [],
   });
   const [busy, setBusy] = useState(false);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [uploaderKey, setUploaderKey] = useState(0); // bumped to reset the uploader after each add
   const [error, setError] = useState(null);
 
   async function handleSubmit(e) {
@@ -27,9 +30,11 @@ function EventForm({ festId, onAdded }) {
         location: form.location || null,
         max_participants: form.max_participants ? Number(form.max_participants) : null,
         entry_fee: Number(form.entry_fee) || 0,
+        media: form.media,
       });
       onAdded(res.data);
-      setForm({ name: "", category: "", description: "", event_date: "", location: "", max_participants: "", entry_fee: "0" });
+      setUploaderKey((k) => k + 1);
+      setForm({ name: "", category: "", description: "", event_date: "", location: "", max_participants: "", entry_fee: "0", media: [] });
     } catch (err) {
       setError(err.response?.data?.detail || "Couldn't add that event.");
     } finally {
@@ -87,11 +92,19 @@ function EventForm({ festId, onAdded }) {
         </div>
       </div>
 
+      <EventMediaUpload
+        key={uploaderKey}
+        media={form.media}
+        onAdd={(items) => setForm((f) => ({ ...f, media: [...f.media, ...items] }))}
+        onRemove={(i) => setForm((f) => ({ ...f, media: f.media.filter((_, idx) => idx !== i) }))}
+        onUploadingChange={setMediaUploading}
+      />
+
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
-      <button type="submit" disabled={busy}
+      <button type="submit" disabled={busy || mediaUploading}
         className="flex items-center gap-1.5 bg-brand-purple hover:bg-brand-purple-dark text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors disabled:opacity-60">
-        <Plus className="w-4 h-4" /> {busy ? "Adding…" : "Add Event"}
+        <Plus className="w-4 h-4" /> {mediaUploading ? "Waiting for upload…" : busy ? "Adding…" : "Add Event"}
       </button>
     </form>
   );
@@ -105,7 +118,7 @@ export default function ListFest() {
   const [fest, setFest] = useState(null);
   const [addedEvents, setAddedEvents] = useState([]);
   const [festForm, setFestForm] = useState({
-    name: "", location: "", description: "", category: [],
+    name: "", college_name: "", location: "", description: "", category: [],
     start_date: "", end_date: "",
   });
   const [busy, setBusy] = useState(false);
@@ -123,9 +136,11 @@ export default function ListFest() {
     setBusy(true);
     setError(null);
     try {
+      // Accounts created via Google sign-in have no college_name on file,
+      // so fall back to what was typed into the form for those.
       const res = await api.post("/fests", {
         ...festForm,
-        college_name: user.college_name,
+        college_name: user.college_name || festForm.college_name.trim(),
       });
       setFest(res.data);
       setStep("events");
@@ -189,7 +204,7 @@ export default function ListFest() {
       <div className="max-w-2xl mx-auto px-6 py-10">
         <div className="flex items-center gap-2 text-brand-purple mb-2">
           <PartyPopper className="w-5 h-5" />
-          <span className="font-semibold text-sm">{user.college_name}</span>
+          <span className="font-semibold text-sm">{user.college_name || "College Rep"}</span>
         </div>
         <h1 className="font-display text-2xl font-bold text-brand-ink mb-6">List Your Fest</h1>
 
@@ -200,6 +215,15 @@ export default function ListFest() {
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm mt-1 outline-none focus:border-brand-purple"
               value={festForm.name} onChange={(e) => setFestForm({ ...festForm, name: e.target.value })} />
           </div>
+
+          {!user.college_name && (
+            <div>
+              <label className="text-xs font-medium text-gray-500">College name</label>
+              <input required placeholder="Your college's full name"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm mt-1 outline-none focus:border-brand-purple"
+                value={festForm.college_name} onChange={(e) => setFestForm({ ...festForm, college_name: e.target.value })} />
+            </div>
+          )}
 
           <div>
             <label className="text-xs font-medium text-gray-500">Location</label>

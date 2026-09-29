@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Building2, Eye, EyeOff, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import GoogleAuthButton from "../components/GoogleAuthButton";
 
 export default function SignIn() {
   const { login, signup } = useAuth();
@@ -94,6 +95,20 @@ export default function SignIn() {
             >
               <Building2 className="w-4 h-4" /> College Rep
             </button>
+          </div>
+
+          <div className="mb-4 flex justify-center">
+            <GoogleAuthButton
+              role={role}
+              onSuccess={() => navigate("/")}
+              onError={(msg) => setError(msg)}
+            />
+          </div>
+
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px bg-gray-200 flex-1" />
+            <span className="text-xs text-gray-400">or use email</span>
+            <div className="h-px bg-gray-200 flex-1" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3">

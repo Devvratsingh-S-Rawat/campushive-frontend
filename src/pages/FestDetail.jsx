@@ -4,6 +4,7 @@ import { MapPin, Calendar, Heart, Users, IndianRupee, CheckCircle2, ArrowLeft } 
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { gradientFor } from "../utils/gradients";
+import EventMediaGallery from "../components/EventMediaGallery";
 
 function formatDateRange(start, end) {
   const opts = { day: "numeric", month: "short", year: "numeric" };
@@ -212,7 +213,7 @@ export default function FestDetail() {
             return (
               <div key={event.id} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
+                  <div className="flex-1 min-w-0">
                     {event.category && (
                       <span className="text-xs font-medium text-brand-purple bg-violet-50 px-2 py-0.5 rounded-full">
                         {event.category}
@@ -222,6 +223,9 @@ export default function FestDetail() {
                     {event.description && (
                       <p className="text-sm text-gray-500 mt-1">{event.description}</p>
                     )}
+
+                    <EventMediaGallery media={event.media} />
+
                     <div className="flex flex-wrap gap-3 text-xs text-gray-400 mt-2">
                       {event.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {event.location}</span>}
                       {event.max_participants && <span className="flex items-center gap-1"><Users className="w-3 h-3" /> Max {event.max_participants}</span>}

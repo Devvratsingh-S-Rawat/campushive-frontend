@@ -46,13 +46,23 @@ export function AuthProvider({ children }) {
     return res.data.user;
   }
 
+  // credential = the ID token from Google Identity Services. role is only
+  // used by the backend if this Google account has never signed in before —
+  // pass whatever the Student/College Rep toggle currently has selected.
+  async function googleLogin(credential, role) {
+    const res = await api.post("/auth/google", { credential, role });
+    localStorage.setItem("campushive_token", res.data.access_token);
+    setUser(res.data.user);
+    return res.data.user;
+  }
+
   function logout() {
     localStorage.removeItem("campushive_token");
     setUser(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, googleLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );
